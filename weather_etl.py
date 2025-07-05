@@ -5,6 +5,7 @@ import logging
 from dotenv import load_dotenv
 from datetime import datetime
 import glob
+from concat_files import concat
 
 # Configuration du logging pour tester le script dans la console de l'ordinateur
 logging.basicConfig(level=logging.INFO)
@@ -127,3 +128,4 @@ if __name__ == "__main__":
     extract()
     transform()
     load()
+    concat()
