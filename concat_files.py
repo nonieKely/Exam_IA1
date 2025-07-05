@@ -1,6 +1,7 @@
 import pandas as pd
 import logging
 import glob
+import os
 
 logging.basicConfig(level=logging.INFO)
 
@@ -57,39 +58,34 @@ def concat():
     else:
         df_historical = pd.concat(df_historical_list, ignore_index=True)
 
-    #Lecture des fichiers récents transformés
-    logging.info("Fusion des fichiers transformés récents...")
+    # Lecture du fichier weather_history.csv existant
+    logging.info("Lecture du fichier final existant s'il existe déjà...")
 
-    transformed_files = glob.glob("/home/nonie/exam_IA/transformed_files/weather-*.csv")
-    df_transformed_list = []
-
-    for file in transformed_files:
+    existing_path = "/home/nonie/exam_IA/final_file/weather_history.csv"
+    if os.path.exists(existing_path):
         try:
-            df = pd.read_csv(file)
-            df_transformed_list.append(df)
+            df_existing = pd.read_csv(existing_path)
         except Exception as e:
-            logging.error(f"Erreur dans {file} : {e}")
-            continue
-
-    if not df_transformed_list:
-        logging.warning("Aucune donnée transformée trouvée.")
-        df_transformed = pd.DataFrame(columns=["Ville", "Température (°C)", "Humidité (%)", "Pression (hPa)", "Vitesse du vent (m/s)", "Date"])
+            logging.warning(f"Erreur lors de la lecture de l'ancien fichier weather_history.csv : {e}")
+            df_existing = pd.DataFrame(columns=["Ville", "Température (°C)", "Humidité (%)", "Pression (hPa)", "Vitesse du vent (m/s)", "Date"])
     else:
-        df_transformed = pd.concat(df_transformed_list, ignore_index=True)
+        df_existing = pd.DataFrame(columns=["Ville", "Température (°C)", "Humidité (%)", "Pression (hPa)", "Vitesse du vent (m/s)", "Date"])
 
     # Fusion finale
-    logging.info("Fusion finale des historiques + transformés...")
+    logging.info("Fusion finale des données existantes + historiques...")
 
-    final_df = pd.concat([df_historical, df_transformed], ignore_index=True)
+    final_df = pd.concat([df_existing, df_historical], ignore_index=True)
 
     final_columns = ["Ville", "Température (°C)", "Humidité (%)", "Pression (hPa)", "Vitesse du vent (m/s)", "Date"]
     final_df = final_df[final_columns]
 
+    # Nettoyage des dates et suppression des doublons
     final_df["Date"] = pd.to_datetime(final_df["Date"], errors="coerce").dt.date
     final_df = final_df.dropna(subset=["Date"])
-
+    final_df = final_df.drop_duplicates(subset=["Ville", "Date"], keep="last")
     final_df = final_df.sort_values(by="Date").reset_index(drop=True)
 
+    # Sauvegarde finale
     output_path = "/home/nonie/exam_IA/final_file/weather_history.csv"
     final_df.to_csv(output_path, index=False)
 
