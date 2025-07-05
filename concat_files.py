@@ -57,6 +57,8 @@ def concat():
         df_historical = pd.DataFrame(columns=["Ville", "Température (°C)", "Humidité (%)", "Pression (hPa)", "Vitesse du vent (m/s)", "Date"])
     else:
         df_historical = pd.concat(df_historical_list, ignore_index=True)
+        # Supprimer les lignes où la ville est "Inconnue"
+        df_historical = df_historical[df_historical["Ville"] != "Inconnue"]
 
     # Lecture du fichier weather_history.csv existant
     logging.info("Lecture du fichier final existant s'il existe déjà...")
