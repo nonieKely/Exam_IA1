@@ -4,10 +4,10 @@ from airflow.operators.python import PythonOperator
 from datetime import datetime
 import sys
 
-sys.path.append('/home/nonie/exam_IA')
+sys.path.append('/home/nonie/exam_IA/scripts')
 
 from weather_etl import extract, transform, load
-
+from concat_files import concat
 
 
 # Configuration les logs si le DAG est exécuté indépendamment pour tester

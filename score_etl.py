@@ -2,16 +2,15 @@ import pandas as pd
 import os
 import logging
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-DATA_PATH = "/home/nonie/exam_IA/final_file/weather_history.csv"
-EXPORT_SCORE_PATH = "/home/nonie/exam_IA/final_file/weather_score.csv"
-EXPORT_BEST_PATH = "/home/nonie/exam_IA/final_file/best_score.csv"
+logging.basicConfig(level=logging.INFO)
 
+
+
+# Chargement de l'historique 
 def extract_weather():
-    global df
-    logging.info(f"Chargement des données depuis : {DATA_PATH}")
-    df = pd.read_csv(DATA_PATH)
+    logging.info("Chargement des données depuis : /home/nonie/exam_IA/final_file/weather_history.csv")
+    df = pd.read_csv("/home/nonie/exam_IA/final_file/weather_history.csv")
     df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
     df["Mois"] = df["Date"].dt.month
     df["Année"] = df["Date"].dt.year
@@ -25,10 +24,15 @@ def extract_weather():
         return noms_mois.get(mois_num, "inconnu")
 
     df["Nom du mois"] = df["Mois"].apply(convertir_mois_en_nom)
-    logging.info(f"Données extraites et enrichies avec les colonnes 'Mois', 'Année' et 'Nom du mois'")
+    logging.info("Données enrichies avec les colonnes 'Mois', 'Année' et 'Nom du mois'")
 
+    df.to_csv("/home/nonie/exam_IA/temp/intermediate.csv", index=False)
+    logging.info("Données sauvegardées temporairement dans : /home/nonie/exam_IA/temp/intermediate.csv")
+
+# Transformation
 def transform_weather():
-    logging.info("Début du calcul du score météo pour chaque ligne")
+    logging.info("Chargement des données pour transformation depuis : /home/nonie/exam_IA/temp/intermediate.csv")
+    df = pd.read_csv("/home/nonie/exam_IA/temp/intermediate.csv")
 
     def score_row(row):
         score = 0
@@ -52,17 +56,24 @@ def transform_weather():
     df["Score météo"] = df.apply(score_row, axis=1)
     logging.info("Scores météo calculés et ajoutés à la DataFrame")
 
+    df.to_csv("/home/nonie/exam_IA/temp/intermediate.csv", index=False)
+    logging.info("Données transformées sauvegardées dans : /home/nonie/exam_IA/temp/intermediate.csv")
+
+
+# stockage des résultats
 def load_weather():
-    logging.info("Calcul de la moyenne des scores par ville et par mois")
+    logging.info("Chargement des données finales depuis : /home/nonie/exam_IA/temp/intermediate.csv")
+    df = pd.read_csv("/home/nonie/exam_IA/temp/intermediate.csv")
+
     mean_score = df.groupby(["Ville", "Mois", "Nom du mois"])["Score météo"].mean().reset_index()
-    mean_score.to_csv(EXPORT_SCORE_PATH, index=False)
-    logging.info(f"Scores moyens sauvegardés dans : {EXPORT_SCORE_PATH}")
+    mean_score.to_csv("/home/nonie/exam_IA/final_file/weather_score.csv", index=False)
+    logging.info("Scores moyens sauvegardés dans : /home/nonie/exam_IA/final_file/weather_score.csv")
 
     best_months = mean_score.sort_values(["Ville", "Score météo"], ascending=[True, False]).groupby("Ville").head(3)
-    best_months.to_csv(EXPORT_BEST_PATH, index=False)
-    logging.info(f"Top 3 des meilleurs mois par ville sauvegardés dans : {EXPORT_BEST_PATH}")
+    best_months.to_csv("/home/nonie/exam_IA/final_file/best_score.csv", index=False)
+    logging.info("Top 3 des meilleurs mois par ville sauvegardés dans : /home/nonie/exam_IA/final_file/best_score.csv")
 
-# Pour tester hors Airflow
+# Pour test hors Airflow
 if __name__ == "__main__":
     extract_weather()
     transform_weather()

@@ -5,14 +5,14 @@ from datetime import datetime
 import sys
 
 # Ajout du dossier contenant les scripts au path Python
-sys.path.append('/home/nonie/exam_IA')
+sys.path.append('/home/nonie/exam_IA/scripts')
 
 # Import des fonctions définies dans ton fichier Python de traitement météo
-from weather_score_etl import extract_weather, transform_weather, load_weather
+from score_etl import extract_weather, transform_weather, load_weather
 
 # Configuration du logging
 logging.basicConfig(level=logging.INFO)
-logging.info("Chargement du DAG weather_score_etl...")
+logging.info("Chargement du DAG score_etl...")
 
 default_args = {
     'start_date': datetime(2024, 1, 1),
